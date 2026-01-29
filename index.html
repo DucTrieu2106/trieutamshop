@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>TRIỆU TÂM - CỬA HÀNG</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="navbar">
+        <h2 onclick="location.href='index.html'" style="cursor:pointer">TRIỆU TÂM</h2>
+        <div class="nav-links">
+            <span id="user-display" style="font-size: 11px; margin-right: 15px; color: #666;"></span>
+            <a href="javascript:void(0)" onclick="logout()" style="color: red; font-weight: bold;">ĐĂNG XUẤT</a>
+        </div>
+    </div>
+    <div class="container">
+        <h1 style="text-align: center; font-family: 'Playfair Display'; letter-spacing: 5px; margin: 40px 0;">COLLECTION</h1>
+        <div class="search-container" style="max-width: 600px; margin: 0 auto 40px; padding: 0 20px;">
+            <input type="text" id="product-search" placeholder="Tìm mã sản phẩm..." onkeyup="searchProducts()" style="width: 100%; padding: 15px; border: 1px solid #eee; outline: none;">
+        </div>
+        <div id="home-product-grid" class="product-grid"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

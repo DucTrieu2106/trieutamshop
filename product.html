@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt hàng - ARTIST</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="navbar"><h2>TRIỆU TÂM</h2><a href="index.html" style="text-decoration:none; color:#111">Quay lại</a></div>
+    
+    <div class="container" style="max-width: 500px; margin-top: 50px;">
+        <div style="background: #111; color: white; padding: 40px; text-align: center; border-radius: 4px 4px 0 0;">
+            <span style="font-size: 11px; letter-spacing: 3px; opacity: 0.6;">PRODUCT CODE</span>
+            <h1 id="display-id" style="font-family: 'Playfair Display'; font-size: 50px; margin: 10px 0; letter-spacing: 5px;">---</h1>
+        </div>
+
+        <div style="background: white; padding: 40px; border: 1px solid #eee; border-top: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+            <label style="font-weight: 600; font-size: 11px; display: block; margin-bottom: 10px;">TÊN HỘ KINH DOANH:</label>
+            <input type="text" id="biz-name" placeholder="Nhập tên hộ kinh doanh của bạn...">
+
+            <div style="display: flex; gap: 20px; margin-top: 20px;">
+                <div style="flex: 2;">
+                    <label style="font-weight: 600; font-size: 11px;">CHỌN SIZE ĐẶT:</label>
+                    <select id="selected-size" style="width:100%; padding:12px; border: 1px solid #ddd;"></select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-weight: 600; font-size: 11px;">SỐ LƯỢNG:</label>
+                    <input type="number" id="selected-qty" value="1" min="1" style="width:100%; padding:12px; border: 1px solid #ddd; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <button class="btn-gold" onclick="handleOrder()" style="margin-top: 30px; width:100%; padding:18px; background:#111; color:#fff; border:none; cursor:pointer; font-weight:bold; letter-spacing:2px; text-transform:uppercase;">XÁC NHẬN ĐẶT HÀNG</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>window.onload = loadProductDetail;</script>
+</body>
+</html>

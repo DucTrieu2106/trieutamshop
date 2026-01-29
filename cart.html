@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Giỏ hàng - Triệu Tâm</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="navbar"><h2>ADMIN SYSTEM</h2><a href="index.html">Về Trang Chủ</a></div>
+    <div class="navbar">
+        <h2>LỊCH SỬ ĐẶT HÀNG</h2>
+        <a href="index.html" style="color:white">Tiếp tục mua sắm</a>
+    </div>
+    <div class="container">
+        <table border="1" width="100%" style="border-collapse: collapse; text-align: center; background: white;">
+            <thead>
+                <tr style="background: #2c3e50; color: white;">
+                    <th>Sản phẩm</th>
+                    <th>Size</th>
+                    <th>Số lượng</th>
+                    <th>Trạng thái đơn hàng</th>
+                </tr>
+            </thead>
+            <tbody id="cart-list"></tbody>
+        </table>
+    </div>
+    <script src="script.js"></script>
+    <script>window.onload = loadUserCart;</script>
+</body>
+</html>
