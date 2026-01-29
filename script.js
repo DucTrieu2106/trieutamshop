@@ -1,45 +1,36 @@
+// --- CẤU HÌNH DATABASE ---
 const PRODUCT_DB = "artist_store_data";
 const ORDER_DB = "artist_order_data";
 const USER_DB = "artist_user_data";
 const CURRENT_USER = "artist_current_session";
 
-// --- 1. BẢO MẬT & ĐĂNG NHẬP ---
+// --- 1. BẢO MẬT & ĐIỀU HƯỚNG ---
 function checkLogin() {
     const user = JSON.parse(localStorage.getItem(CURRENT_USER));
     const path = window.location.pathname;
     const fileName = path.split("/").pop();
 
-    if (!user && fileName !== 'login.html' && fileName !== "") {
-        window.location.href = 'login.html';
-        return;
-    }
-    // Chặn khách vào trang admin bằng link trực tiếp
-    if (user && user.role !== 'admin' && fileName === 'admin.html') {
-        window.location.href = 'index.html';
+    // Nếu chưa đăng nhập: Phải về login.html
+    if (!user) {
+        if (fileName !== 'login.html' && fileName !== "") {
+            window.location.href = 'login.html';
+            return;
+        }
+    } 
+    // Nếu đã đăng nhập: Chặn vào lại login hoặc vào admin trái phép
+    else {
+        if (fileName === 'login.html') {
+            window.location.href = (user.role === 'admin') ? 'admin.html' : 'index.html';
+            return;
+        }
+        if (user.role !== 'admin' && fileName === 'admin.html') {
+            window.location.href = 'index.html';
+        }
     }
 }
 
-// Hàm hiện nút Admin cho đúng người
-function displayAdminButton() {
-    const user = JSON.parse(localStorage.getItem(CURRENT_USER));
-    const area = document.getElementById('admin-btn-area');
-    if (!area) return;
-
-    if (user && user.role === 'admin') {
-        area.innerHTML = `
-            <a href="admin.html" style="
-                background: #d4af37; 
-                color: black; 
-                padding: 5px 10px; 
-                text-decoration: none; 
-                border-radius: 4px; 
-                font-weight: bold; 
-                margin-right: 15px;
-                font-size: 11px;
-            ">QUẢN TRỊ</a>
-        `;
-    }
-}
+// Chạy kiểm tra đăng nhập ngay khi file script được nạp
+checkLogin();
 
 function login(username, password) {
     if (username === 'trieutamshop' && password === 'trieutam123123@') {
@@ -47,8 +38,10 @@ function login(username, password) {
         window.location.href = 'admin.html';
         return;
     }
+
     let users = JSON.parse(localStorage.getItem(USER_DB)) || [];
     let customer = users.find(u => u.username === username && u.password === password);
+    
     if (customer) {
         localStorage.setItem(CURRENT_USER, JSON.stringify({ role: 'customer', name: username }));
         window.location.href = 'index.html';
@@ -58,9 +51,19 @@ function login(username, password) {
 }
 
 function logout() {
-    if(confirm("Bạn muốn đăng xuất?")) {
+    if(confirm("Bạn muốn đăng xuất khỏi hệ thống?")) {
         localStorage.removeItem(CURRENT_USER);
         window.location.href = 'login.html';
+    }
+}
+
+function displayAdminButton() {
+    const user = JSON.parse(localStorage.getItem(CURRENT_USER));
+    const area = document.getElementById('admin-btn-area');
+    if (user && user.role === 'admin' && area) {
+        area.innerHTML = `
+            <a href="admin.html" style="background: #d4af37; color: black; padding: 5px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-right: 15px; font-size: 11px;">QUẢN TRỊ</a>
+        `;
     }
 }
 
@@ -77,7 +80,7 @@ function renderHomeProducts(filterData = null) {
 
     grid.innerHTML = products.map(p => `
         <div class="product-card">
-            <img src="${p.img}" style="width:100%; border-radius:4px;">
+            <img src="${p.img}" style="width:100%; border-radius:4px; aspect-ratio: 1 / 1; object-fit: cover;">
             <p style="font-size:10px; color:#999; letter-spacing:2px; margin-top:10px;">CODE: ${p.id}</p>
             <h3>${p.name}</h3>
             <p class="price" style="font-weight:bold; color:#d4af37;">${p.price}</p>
@@ -91,154 +94,29 @@ function searchProducts() {
     renderHomeProducts(kw === "" ? all : all.filter(p => p.id.toLowerCase().includes(kw) || p.name.toLowerCase().includes(kw)));
 }
 
-// --- 3. ĐẶT HÀNG ---
-function loadProductDetail() {
-    const urlParams = new URLSearchParams(window.location.search);
-    let pId = decodeURIComponent(urlParams.get('id'));
-    const p = (JSON.parse(localStorage.getItem(PRODUCT_DB)) || []).find(item => item.id === pId);
-    if (p) {
-        document.getElementById('display-id').innerText = p.id;
-        let sizeH = "";
-        const code = p.id.toUpperCase();
-        if (code.startsWith("#A")) sizeH = `<option value="L">Size L</option><option value="XL">Size XL</option><option value="XXL">Size XXL</option>`;
-        else if (code.startsWith("#Q")) sizeH = `<option value="Size 1">Size 1</option><option value="Size 2">Size 2</option>`;
-        else sizeH = `<option value="Free Size">Free Size</option>`;
-        document.getElementById('selected-size').innerHTML = sizeH;
-    }
-}
-
-function handleOrder() {
-    const user = JSON.parse(localStorage.getItem(CURRENT_USER));
-    const biz = document.getElementById('biz-name').value.trim();
-    if (!biz) return alert("Vui lòng nhập tên hộ kinh doanh!");
-
-    const d = new Date();
-    const order = {
-        orderUniqueId: Date.now(),
-        customerName: user.name,
-        date: `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`,
-        time: `${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`,
-        biz: biz,
-        pid: document.getElementById('display-id').innerText,
-        psize: document.getElementById('selected-size').value,
-        pqty: document.getElementById('selected-qty').value,
-        status: "Chờ duyệt"
-    };
-
-    let orders = JSON.parse(localStorage.getItem(ORDER_DB)) || [];
-    orders.push(order);
-    localStorage.setItem(ORDER_DB, JSON.stringify(orders));
-    alert("Đặt hàng thành công!");
-    window.location.href = 'index.html';
-}
-
-// --- 4. ADMIN & LỊCH SỬ ---
-function loadAdminOrders() {
-    const container = document.getElementById('admin-orders-container');
-    if (!container) return;
-    let orders = JSON.parse(localStorage.getItem(ORDER_DB)) || [];
-    const groups = [...orders].reverse().reduce((acc, o) => { (acc[o.date] = acc[o.date] || []).push(o); return acc; }, {});
-    
-    let html = "";
-    for (const date in groups) {
-        const delivered = groups[date].filter(o => o.status === "Đã giao");
-        const sum = delivered.reduce((acc, o) => { acc[o.pid] = (acc[o.pid] || 0) + parseInt(o.pqty); return acc; }, {});
-        let sumTxt = Object.entries(sum).map(([id, q]) => `${id}: ${q}`).join(' | ') || "0";
-
-        html += `<div class="date-group-header"><span>NGÀY: ${date}</span><span class="summary-tag">GIAO: ${sumTxt}</span></div>
-            <table style="width:100%; border-collapse: collapse; margin-bottom: 20px;"><thead><tr style="background:#eee"><th>KHÁCH</th><th>HỘ KD</th><th>MÃ</th><th>SIZE</th><th>SL</th><th>TRẠNG THÁI</th><th>HĐ</th></tr></thead>
-            <tbody>${groups[date].map(o => `<tr>
-                <td>${o.customerName}</td><td>${o.biz}</td><td>${o.pid}</td><td>${o.psize}</td><td>${o.pqty}</td>
-                <td style="color:${o.status==='Đã giao'?'#27ae60':'#d4af37'}"><strong>${o.status}</strong></td>
-                <td>
-                    ${o.status !== 'Đã giao' ? `<button onclick="shipOrder(${o.orderUniqueId})">Giao</button>` : '✅'}
-                    <button onclick="deleteOrder(${o.orderUniqueId})" style="background:red;color:white; border:none; padding:4px 8px; cursor:pointer;">Xóa</button>
-                </td>
-            </tr>`).join('')}</tbody></table>`;
-    }
-    container.innerHTML = html;
-}
-
-function loadCustomerHistory() {
-    const user = JSON.parse(localStorage.getItem(CURRENT_USER));
-    const container = document.getElementById('customer-history');
-    if (!container || !user) return;
-    let orders = JSON.parse(localStorage.getItem(ORDER_DB)) || [];
-    let myOrders = orders.filter(o => o.customerName === user.name).reverse();
-    container.innerHTML = myOrders.map(o => `<tr><td style="padding:10px; border-bottom:1px solid #eee;">${o.time} - ${o.date}</td><td>${o.pid}</td><td>${o.psize}</td><td>${o.pqty}</td><td style="color:${o.status==='Đã giao'?'green':'orange'}">${o.status}</td></tr>`).join('');
-}
-
-function shipOrder(id) {
-    let orders = JSON.parse(localStorage.getItem(ORDER_DB));
-    let idx = orders.findIndex(o => o.orderUniqueId === id);
-    if(idx !== -1) {
-        orders[idx].status = "Đã giao";
-        localStorage.setItem(ORDER_DB, JSON.stringify(orders));
-        loadAdminOrders();
-    }
-}
-
-function deleteOrder(id) {
-    if(confirm("Xóa đơn?")) {
-        let orders = JSON.parse(localStorage.getItem(ORDER_DB));
-        localStorage.setItem(ORDER_DB, JSON.stringify(orders.filter(o => o.orderUniqueId !== id)));
-        loadAdminOrders();
-    }
-}
-
-function addNewProduct() {
-    const id = document.getElementById('p-id').value.trim();
-    const name = document.getElementById('p-name').value;
-    const file = document.getElementById('p-img-file').files[0];
-    if(!id || !name || !file) return alert("Nhập đủ thông tin!");
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        let products = JSON.parse(localStorage.getItem(PRODUCT_DB)) || [];
-        products.push({ id, name, price: document.getElementById('p-price').value, img: e.target.result });
-        localStorage.setItem(PRODUCT_DB, JSON.stringify(products));
-        alert("Cập nhật sản phẩm thành công!");
-        location.reload();
-    };
-    reader.readAsDataURL(file);
-}
-
-function createCustomerAccount() {
-    const user = document.getElementById('new-user').value.trim();
-    const pass = document.getElementById('new-pass').value.trim();
-    if(!user || !pass) return alert("Nhập đủ!");
-    let users = JSON.parse(localStorage.getItem(USER_DB)) || [];
-    users.push({ username: user, password: pass });
-    localStorage.setItem(USER_DB, JSON.stringify(users));
-    alert("Đã tạo TK: " + user);
-}
-
-function deleteProduct(id) {
-    if(confirm("Xóa SP?")) {
-        let products = JSON.parse(localStorage.getItem(PRODUCT_DB));
-        localStorage.setItem(PRODUCT_DB, JSON.stringify(products.filter(p => p.id !== id)));
-        location.reload();
-    }
-}
-
-// KHỞI CHẠY
+// --- 3. KHỞI CHẠY (WINDOW.ONLOAD) ---
 window.onload = function() {
-    checkLogin();
-    displayAdminButton(); // Gọi hàm hiện nút Quản trị
+    displayAdminButton(); 
     
     const user = JSON.parse(localStorage.getItem(CURRENT_USER));
-    if (user && document.getElementById('user-display')) document.getElementById('user-display').innerText = "Chào, " + user.name;
+    if (user && document.getElementById('user-display')) {
+        document.getElementById('user-display').innerText = "Chào, " + user.name;
+    }
     
     if (document.getElementById('home-product-grid')) renderHomeProducts();
-    if (document.getElementById('admin-orders-container')) loadAdminOrders();
-    if (document.getElementById('customer-history')) loadCustomerHistory();
-    if (document.getElementById('display-id')) loadProductDetail();
     
-    if (document.getElementById('inventory-list')) {
-        let products = JSON.parse(localStorage.getItem(PRODUCT_DB)) || [];
-        document.getElementById('inventory-list').innerHTML = products.map(p => `
-            <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center;">
-                <span>${p.id}</span>
-                <button onclick="deleteProduct('${p.id}')" style="background:#eee; border:1px solid #ccc; cursor:pointer; padding:5px;">Xóa</button>
-            </div>`).join('');
+    // Load lịch sử khách hàng
+    const historyContainer = document.getElementById('customer-history');
+    if (historyContainer && user) {
+        let orders = JSON.parse(localStorage.getItem(ORDER_DB)) || [];
+        let myOrders = orders.filter(o => o.customerName === user.name).reverse();
+        historyContainer.innerHTML = myOrders.map(o => `
+            <tr>
+                <td style="padding:10px; border-bottom:1px solid #eee;">${o.time} - ${o.date}</td>
+                <td>${o.pid}</td>
+                <td>${o.psize}</td>
+                <td>${o.pqty}</td>
+                <td style="color:${o.status==='Đã giao'?'green':'orange'}">${o.status}</td>
+            </tr>`).join('');
     }
 };

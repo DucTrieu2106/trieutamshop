@@ -2,22 +2,33 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - TRIỆU TÂM</title>
-    <link rel="stylesheet" href="style.css">
     <style>
-        body { background: #111; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .login-box { background: #fff; padding: 40px; width: 320px; text-align: center; border-radius: 4px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #111; color: #fff; border: none; cursor: pointer; font-weight: bold; }
+        body { background: #111; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
+        .login-box { background: #fff; padding: 40px; width: 320px; text-align: center; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { letter-spacing: 5px; color: #111; margin-bottom: 30px; text-transform: uppercase; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; box-sizing: border-box; border-radius: 4px; outline: none; }
+        button { width: 100%; padding: 12px; background: #111; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; margin-top: 15px; transition: 0.3s; }
+        button:hover { background: #d4af37; color: #000; }
     </style>
 </head>
 <body>
     <div class="login-box">
-        <h2 style="letter-spacing: 5px;">TRIỆU TÂM</h2>
+        <h2>TRIỆU TÂM</h2>
         <input type="text" id="user" placeholder="Tên tài khoản">
         <input type="password" id="pass" placeholder="Mật khẩu">
-        <button onclick="login(document.getElementById('user').value, document.getElementById('pass').value)">ĐĂNG NHẬP</button>
+        <button onclick="handleLogin()">ĐĂNG NHẬP</button>
     </div>
+
     <script src="script.js"></script>
+    <script>
+        function handleLogin() {
+            const u = document.getElementById('user').value.trim();
+            const p = document.getElementById('pass').value.trim();
+            if(!u || !p) return alert("Vui lòng nhập đủ thông tin!");
+            login(u, p); 
+        }
+    </script>
 </body>
 </html>
