@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap');
+
+:root {
+    --gold: #d4af37;
+    --dark: #111111;
+    --light: #ffffff;
+    --gray: #f8f9fa;
+}
+
+body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--light); color: var(--dark); overflow-x: hidden; }
+
+/* Navbar */
+.navbar { background: white; padding: 20px 8%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 1000; }
+.navbar h2 { font-family: 'Playfair Display', serif; letter-spacing: 4px; margin: 0; cursor: pointer; text-transform: uppercase; }
+.nav-links a { text-decoration: none; color: var(--dark); margin-left: 25px; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; transition: 0.3s; }
+.nav-links a:hover { color: var(--gold); }
+
+/* Hero Section */
+.hero { height: 40vh; background: var(--dark); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.hero h1 { font-family: 'Playfair Display', serif; font-size: 3rem; margin: 0; }
+.hero p { letter-spacing: 5px; font-weight: 300; margin-top: 10px; opacity: 0.8; }
+
+/* Container & Grid */
+.container { max-width: 1200px; margin: 50px auto; padding: 0 20px; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 40px; }
+
+/* Card Sản phẩm */
+.product-card { text-align: center; transition: 0.4s; }
+.product-card:hover { transform: translateY(-5px); }
+.product-card img { width: 100%; height: 380px; object-fit: cover; border-radius: 2px; }
+.p-id-tag { font-size: 10px; color: #999; letter-spacing: 2px; margin: 15px 0 5px; }
+.product-card h3 { font-family: 'Playfair Display', serif; margin: 5px 0; font-size: 18px; }
+.price { color: var(--gold); font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+
+/* Nút bấm sang trọng */
+.btn-gold { 
+    display: inline-block; width: 100%; padding: 15px 0; background: var(--dark); color: white; 
+    text-decoration: none; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; border: none; cursor: pointer; transition: 0.3s;
+}
+.btn-gold:hover { background: var(--gold); }
+
+/* Form nhập liệu */
+input, textarea, select { 
+    width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #eee; 
+    background: var(--gray); font-family: inherit; box-sizing: border-box; 
+}
+.size-selection { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
+
+/* Bảng Admin */
+table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+th { text-align: left; padding: 15px; border-bottom: 2px solid var(--dark); font-size: 12px; text-transform: uppercase; }
+td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }

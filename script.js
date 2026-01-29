@@ -48,14 +48,14 @@ function renderHomeProducts(filterData = null) {
     let products = filterData || JSON.parse(localStorage.getItem(PRODUCT_DB)) || [];
     
     if(products.length === 0) {
-        grid.innerHTML = "<p style='grid-column:1/-1; text-align:center; padding:50px;'>Chưa có sản phẩm nào.</p>";
+        grid.innerHTML = "<p style='grid-column:1/-1; text-align:center; padding:50px; opacity:0.5;'>Chưa có sản phẩm nào.</p>";
         return;
     }
 
     grid.innerHTML = products.map(p => `
         <div class="product-card">
             <img src="${p.img}">
-            <p style="font-size:10px; color:#999;">CODE: ${p.id}</p>
+            <p style="font-size:10px; color:#999; letter-spacing:2px; margin-top:10px;">CODE: ${p.id}</p>
             <h3>${p.name}</h3>
             <p class="price">${p.price}</p>
             <a href="product.html?id=${encodeURIComponent(p.id)}" class="btn-gold">ĐẶT HÀNG</a>
@@ -109,24 +109,7 @@ function handleOrder() {
     window.location.href = 'index.html';
 }
 
-// --- 4. ADMIN ---
-function addNewProduct() {
-    const id = document.getElementById('p-id').value.trim();
-    const name = document.getElementById('p-name').value;
-    const file = document.getElementById('p-img-file').files[0];
-    if(!id || !name || !file) return alert("Nhập đủ thông tin!");
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        let products = JSON.parse(localStorage.getItem(PRODUCT_DB)) || [];
-        products.push({ id, name, price: document.getElementById('p-price').value, img: e.target.result });
-        localStorage.setItem(PRODUCT_DB, JSON.stringify(products));
-        alert("Cập nhật sản phẩm thành công!");
-        location.reload();
-    };
-    reader.readAsDataURL(file);
-}
-
+// --- 4. ADMIN & LỊCH SỬ ---
 function loadAdminOrders() {
     const container = document.getElementById('admin-orders-container');
     if (!container) return;
@@ -140,9 +123,9 @@ function loadAdminOrders() {
         let sumTxt = Object.entries(sum).map(([id, q]) => `${id}: ${q}`).join(' | ') || "0";
 
         html += `<div class="date-group-header"><span>NGÀY: ${date}</span><span class="summary-tag">GIAO: ${sumTxt}</span></div>
-            <table><thead><tr><th>KHÁCH</th><th>MÃ</th><th>SIZE</th><th>SL</th><th>TRẠNG THÁI</th><th>HĐ</th></tr></thead>
+            <table><thead><tr><th>KHÁCH</th><th>HỘ KD</th><th>MÃ</th><th>SIZE</th><th>SL</th><th>TRẠNG THÁI</th><th>HĐ</th></tr></thead>
             <tbody>${groups[date].map(o => `<tr>
-                <td>${o.customerName}</td><td>${o.pid}</td><td>${o.psize}</td><td>${o.pqty}</td>
+                <td>${o.customerName}</td><td>${o.biz}</td><td>${o.pid}</td><td>${o.psize}</td><td>${o.pqty}</td>
                 <td style="color:${o.status==='Đã giao'?'#27ae60':'#d4af37'}"><strong>${o.status}</strong></td>
                 <td>
                     ${o.status !== 'Đã giao' ? `<button onclick="shipOrder(${o.orderUniqueId})">Giao</button>` : '✅'}
@@ -151,6 +134,15 @@ function loadAdminOrders() {
             </tr>`).join('')}</tbody></table>`;
     }
     container.innerHTML = html;
+}
+
+function loadCustomerHistory() {
+    const user = JSON.parse(localStorage.getItem(CURRENT_USER));
+    const container = document.getElementById('customer-history');
+    if (!container || !user) return;
+    let orders = JSON.parse(localStorage.getItem(ORDER_DB)) || [];
+    let myOrders = orders.filter(o => o.customerName === user.name).reverse();
+    container.innerHTML = myOrders.map(o => `<tr><td>${o.time} - ${o.date}</td><td>${o.pid}</td><td>${o.psize}</td><td>${o.pqty}</td><td style="color:${o.status==='Đã giao'?'green':'orange'}">${o.status}</td></tr>`).join('');
 }
 
 function shipOrder(id) {
@@ -168,6 +160,22 @@ function deleteOrder(id) {
     }
 }
 
+function addNewProduct() {
+    const id = document.getElementById('p-id').value.trim();
+    const name = document.getElementById('p-name').value;
+    const file = document.getElementById('p-img-file').files[0];
+    if(!id || !name || !file) return alert("Nhập đủ thông tin!");
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        let products = JSON.parse(localStorage.getItem(PRODUCT_DB)) || [];
+        products.push({ id, name, price: document.getElementById('p-price').value, img: e.target.result });
+        localStorage.setItem(PRODUCT_DB, JSON.stringify(products));
+        alert("Cập nhật sản phẩm thành công!");
+        location.reload();
+    };
+    reader.readAsDataURL(file);
+}
+
 function createCustomerAccount() {
     const user = document.getElementById('new-user').value.trim();
     const pass = document.getElementById('new-pass').value.trim();
@@ -178,13 +186,6 @@ function createCustomerAccount() {
     alert("Đã tạo TK: " + user);
 }
 
-function loadInventory() {
-    const container = document.getElementById('inventory-list');
-    if(!container) return;
-    let products = JSON.parse(localStorage.getItem(PRODUCT_DB)) || [];
-    container.innerHTML = products.map(p => `<div class="inventory-item"><span>${p.id}</span><button onclick="deleteProduct('${p.id}')">Xóa</button></div>`).join('');
-}
-
 function deleteProduct(id) {
     if(confirm("Xóa SP?")) {
         let products = JSON.parse(localStorage.getItem(PRODUCT_DB));
@@ -193,13 +194,16 @@ function deleteProduct(id) {
     }
 }
 
-// --- KHỞI CHẠY ---
 window.onload = function() {
     checkLogin();
     const user = JSON.parse(localStorage.getItem(CURRENT_USER));
     if (user && document.getElementById('user-display')) document.getElementById('user-display').innerText = "Chào, " + user.name;
     if (document.getElementById('home-product-grid')) renderHomeProducts();
     if (document.getElementById('admin-orders-container')) loadAdminOrders();
-    if (document.getElementById('inventory-list')) loadInventory();
+    if (document.getElementById('customer-history')) loadCustomerHistory();
     if (document.getElementById('display-id')) loadProductDetail();
+    if (document.getElementById('inventory-list')) {
+        let products = JSON.parse(localStorage.getItem(PRODUCT_DB)) || [];
+        document.getElementById('inventory-list').innerHTML = products.map(p => `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee;"><span>${p.id}</span><button onclick="deleteProduct('${p.id}')">Xóa</button></div>`).join('');
+    }
 };
