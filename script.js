@@ -10,7 +10,7 @@ const firebaseConfig = {
   databaseURL: "https://trieu-tam-shop-default-rtdb.firebaseio.com"
 };
 
-// Khởi tạo
+// Khởi tạo Firebase bản 8.10.0
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const CURRENT_USER = "artist_current_session";
@@ -45,7 +45,7 @@ function logout() {
     window.location.href = 'login.html';
 }
 
-// --- 3. QUẢN LÝ SẢN PHẨM (ĐỒNG BỘ REALTIME) ---
+// --- 3. QUẢN LÝ SẢN PHẨM (REALTIME) ---
 function renderHomeProducts() {
     const grid = document.getElementById('home-product-grid');
     if (!grid) return;
@@ -110,8 +110,9 @@ function loadAdminOrders() {
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
         const orders = data ? Object.values(data).reverse() : [];
-        container.innerHTML = orders.map(o => `
-            <tr>
+        container.innerHTML = `<table>
+            <thead><tr><th>KHÁCH</th><th>HỘ KD</th><th>MÃ</th><th>SIZE</th><th>SL</th><th>TRẠNG THÁI</th><th>HĐ</th></tr></thead>
+            <tbody>${orders.map(o => `<tr>
                 <td>${o.customerName}</td><td>${o.biz}</td><td>${o.pid}</td>
                 <td>${o.psize}</td><td>${o.pqty}</td>
                 <td style="color:${o.status==='Đã giao'?'green':'orange'}">${o.status}</td>
@@ -119,7 +120,7 @@ function loadAdminOrders() {
                     ${o.status !== 'Đã giao' ? `<button onclick="shipOrder(${o.orderUniqueId})">Giao</button>` : '✅'}
                     <button onclick="deleteOrder(${o.orderUniqueId})" style="background:red;color:white">Xóa</button>
                 </td>
-            </tr>`).join('');
+            </tr>`).join('')}</tbody></table>`;
     });
 }
 
@@ -135,7 +136,6 @@ window.onload = function() {
     checkLogin();
     if (document.getElementById('home-product-grid')) renderHomeProducts();
     if (document.getElementById('admin-orders-container')) loadAdminOrders();
-    // Tự động load chi tiết sản phẩm khi đặt hàng
     if (document.getElementById('display-id')) {
         const pId = decodeURIComponent(new URLSearchParams(window.location.search).get('id'));
         db.ref('products/' + pId).once('value', (s) => {
