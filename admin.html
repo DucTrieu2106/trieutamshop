@@ -4,51 +4,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>Quản trị - TRIỆU TÂM</title>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
-        .admin-flex { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
-        .box { flex: 1; min-width: 300px; border: 1px solid #eee; padding: 20px; background: #fff; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 10px; border: 1px solid #eee; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; box-sizing: border-box; }
-        button { padding: 10px; cursor: pointer; border: none; font-weight: bold; border-radius: 4px; }
+        .box { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; background: #fff; border-radius: 8px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { padding: 10px 20px; cursor: pointer; background: #111; color: #fff; border: none; }
+        .nav { background: #000; padding: 10px; text-align: right; }
+        .nav a { color: #d4af37; text-decoration: none; margin-left: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="navbar"><h2>HỆ THỐNG ADMIN</h2><a href="index.html">VỀ TRANG CHỦ</a></div>
-    <div class="container" style="margin-top: 20px;">
-        <div class="admin-flex">
-            <div class="box">
-                <h3>THÊM SẢN PHẨM</h3>
-                <input type="text" id="p-id" placeholder="Mã SP (VD: #Q27)">
-                <input type="text" id="p-name" placeholder="Tên sản phẩm">
-                <input type="text" id="p-price" placeholder="Giá">
-                <input type="file" id="p-img-file" accept="image/*">
-                <button onclick="addNewProduct()" style="width:100%; background:#111; color:#fff;">CẬP NHẬT LÊN HỆ THỐNG</button>
-            </div>
-            <div class="box">
-                <h3>KHO HÀNG HIỆN TẠI</h3>
-                <div id="inventory-list" style="max-height: 250px; overflow-y: auto;"></div>
-            </div>
-            <div class="box">
-                <h3>CẤP TÀI KHOẢN KHÁCH</h3>
-                <input type="text" id="new-user" placeholder="Tên đăng nhập">
-                <input type="text" id="new-pass" placeholder="Mật khẩu">
-                <button onclick="createCustomerAccount()" style="width:100%; background:#666; color:#fff;">TẠO TÀI KHOẢN</button>
-            </div>
+    <div class="nav">
+        <a href="index.html">TRANG CHỦ</a>
+        <a href="#" onclick="logout()">ĐĂNG XUẤT</a>
+    </div>
+
+    <div class="container" style="padding: 20px;">
+        <div class="box">
+            <h3>THÊM SẢN PHẨM MỚI</h3>
+            <input type="text" id="p-id" placeholder="Mã SP (VD: #Q27)">
+            <input type="text" id="p-name" placeholder="Tên sản phẩm">
+            <input type="text" id="p-price" placeholder="Giá">
+            <input type="file" id="p-img-file" accept="image/*">
+            <button onclick="addNewProduct()">CẬP NHẬT LÊN HỆ THỐNG</button>
         </div>
 
         <div class="box">
-            <h3>DANH SÁCH ĐƠN HÀNG</h3>
-            <div id="admin-orders-container" style="overflow-x: auto;"></div>
+            <h3>TẠO TÀI KHOẢN CHO KHÁCH</h3>
+            <input type="text" id="new-user" placeholder="Tên đăng nhập khách">
+            <input type="text" id="new-pass" placeholder="Mật khẩu">
+            <button onclick="createCustomerAccount()" style="background: #444;">TẠO TÀI KHOẢN</button>
         </div>
 
-        <h2 style="text-align: center; margin-top: 50px;">XEM TRƯỚC TRANG CHỦ</h2>
+        <h3>XEM TRƯỚC SHOP</h3>
         <div id="home-product-grid" class="product-grid"></div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
-
