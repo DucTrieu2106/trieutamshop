@@ -1,4 +1,4 @@
-// 1. Cấu hình Firebase đồng bộ với dự án Trieu Tam Shop của bạn
+// 1. CẤU HÌNH FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyCFB6byIpcDVqE7z7H6wN7dr256s68VCho",
   authDomain: "trieu-tam-shop.firebaseapp.com",
@@ -10,12 +10,43 @@ const firebaseConfig = {
   databaseURL: "https://trieu-tam-shop-default-rtdb.firebaseio.com"
 };
 
-// Khởi tạo Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const CURRENT_USER = "artist_current_session";
+const SESSION_KEY = "trieu_tam_user_session";
+
+// --- QUẢN LÝ TRUY CẬP ---
+function checkLogin() {
+    const user = JSON.parse(localStorage.getItem(SESSION_KEY));
+    const isLoginPage = window.location.pathname.includes("login.html");
+    
+    if (!user && !isLoginPage) {
+        window.location.href = "login.html";
+    }
+}
+
+function login(username, password) {
+    // Admin mặc định của bạn
+    if (username === 'trieutamshop' && password === 'trieutam123123@') {
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ role: 'admin', name: 'Đức Triệu' }));
+        window.location.href = 'admin.html';
+        return;
+    }
+    // Kiểm tra khách từ Firebase
+    db.ref('users/' + username).once('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.password === password) {
+            localStorage.setItem(SESSION_KEY, JSON.stringify({ role: 'customer', name: username }));
+            window.location.href = 'index.html';
+        } else {
+            alert("Sai tài khoản hoặc mật khẩu!");
+        }
+    });
+}
+
+function logout() {
+    localStorage.removeItem(SESSION_KEY);
+    window.location.href = 'login.html';
+}
 
 // --- QUẢN LÝ SẢN PHẨM ---
 function addNewProduct() {
@@ -24,19 +55,12 @@ function addNewProduct() {
     const price = document.getElementById('p-price').value.trim();
     const file = document.getElementById('p-img-file').files[0];
 
-    if(!id || !name || !file) return alert("Vui lòng nhập đủ Mã SP, Tên và chọn Ảnh!");
+    if(!id || !name || !file) return alert("Vui lòng nhập đủ thông tin!");
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        db.ref('products/' + id).set({
-            id: id,
-            name: name,
-            price: price,
-            img: e.target.result
-        }).then(() => {
-            alert("Đã cập nhật sản phẩm " + id + " thành công!");
-            location.reload();
-        }).catch(err => alert("Lỗi: " + err.message));
+        db.ref('products/' + id).set({ id, name, price, img: e.target.result })
+          .then(() => { alert("Đã cập nhật xong!"); location.reload(); });
     };
     reader.readAsDataURL(file);
 }
@@ -46,54 +70,28 @@ function renderHomeProducts() {
     if (!grid) return;
     db.ref('products').on('value', (snapshot) => {
         const products = snapshot.val() ? Object.values(snapshot.val()) : [];
-        grid.innerHTML = products.length === 0 ? 
-            "<p style='grid-column:1/-1; text-align:center;'>Chưa có sản phẩm nào.</p>" : 
-            products.map(p => `
+        grid.innerHTML = products.map(p => `
             <div class="product-card">
                 <img src="${p.img}" style="width:100%">
-                <p style="font-size:10px; color:#999; margin-top:10px;">CODE: ${p.id}</p>
+                <p>CODE: ${p.id}</p>
                 <h3>${p.name}</h3>
-                <p class="price" style="font-weight:bold; color:#d4af37;">${p.price}</p>
-                <a href="product.html?id=${encodeURIComponent(p.id)}" class="btn-gold" style="display:block; text-align:center; background:#111; color:#fff; padding:10px; text-decoration:none;">ĐẶT HÀNG</a>
+                <p class="price">${p.price}</p>
+                <a href="product.html?id=${p.id}" class="btn-gold">ĐẶT HÀNG</a>
             </div>`).join('');
     });
 }
 
-// --- QUẢN LÝ ĐƠN HÀNG & TÀI KHOẢN ---
 function createCustomerAccount() {
     const user = document.getElementById('new-user').value.trim();
     const pass = document.getElementById('new-pass').value.trim();
     if(user && pass) {
         db.ref('users/' + user).set({ username: user, password: pass })
-          .then(() => alert("Đã tạo tài khoản khách: " + user));
+          .then(() => alert("Đã tạo tài khoản cho khách: " + user));
     }
 }
 
-function loadInventory() {
-    const list = document.getElementById('inventory-list');
-    if (!list) return;
-    db.ref('products').on('value', (snapshot) => {
-        const data = snapshot.val();
-        const products = data ? Object.values(data) : [];
-        list.innerHTML = products.map(p => `
-            <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
-                <span>${p.id}</span>
-                <button onclick="if(confirm('Xóa?')) db.ref('products/${p.id}').remove()" style="color:red; border:none; background:none; cursor:pointer;">Xóa</button>
-            </div>`).join('');
-    });
-}
-
-function checkLogin() {
-    const user = JSON.parse(localStorage.getItem(CURRENT_USER));
-    const path = window.location.pathname;
-    const fileName = path.split("/").pop();
-    if (!user && fileName !== 'login.html' && fileName !== "") {
-        window.location.href = 'login.html';
-    }
-}
-
+// Khởi chạy
+checkLogin();
 window.onload = function() {
-    checkLogin();
     if (document.getElementById('home-product-grid')) renderHomeProducts();
-    if (document.getElementById('inventory-list')) loadInventory();
 };
