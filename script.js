@@ -1,27 +1,32 @@
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbwm_WqrOEPuB8NQK-isp70FbkGWMXRc2g1VC4NwZJUuULBC0IpxmdzJswWWdd3UYEGmKA/exec";
 const CURRENT_USER = "trieu_tam_session";
 
-// --- CƠ CHẾ BẮT BUỘC ĐĂNG NHẬP ---
+/**
+ * 1. HỆ THỐNG BẢO MẬT & ĐIỀU HƯỚNG
+ * Đảm bảo khách phải đăng nhập mới được xem nội dung.
+ */
 (function() {
     const user = JSON.parse(localStorage.getItem(CURRENT_USER));
     const isLoginPage = window.location.pathname.includes("login.html");
 
-    // Nếu KHÔNG có user và KHÔNG phải đang ở trang login -> Chuyển về login
+    // Nếu chưa đăng nhập -> Đẩy về trang login
     if (!user && !isLoginPage) {
         window.location.replace("login.html");
     }
-    
-    // Nếu ĐÃ có user mà vẫn cố vào trang login -> Đẩy vào trang chủ
+    // Nếu đã đăng nhập mà vẫn ở trang login -> Đẩy vào trang chủ
     if (user && isLoginPage) {
         window.location.replace("index.html");
     }
 })();
 
-// 2. TÍNH NĂNG TÌM KIẾM & HIỂN THỊ SẢN PHẨM (TRANG CHỦ)
+/**
+ * 2. HIỂN THỊ & TÌM KIẾM SẢN PHẨM (TRANG CHỦ)
+ */
 function searchProducts() {
     const kw = document.getElementById('product-search') ? document.getElementById('product-search').value.toLowerCase().trim() : "";
     const grid = document.getElementById('home-product-grid');
     if (!grid) return;
+    
     const user = JSON.parse(localStorage.getItem(CURRENT_USER));
 
     fetch(`${SHEET_URL}?mode=products`)
@@ -44,17 +49,19 @@ function searchProducts() {
                     <p class="price" style="color:#d4af37; font-weight:bold; font-size:18px;">${p.price}</p>
                     <p style="font-size:11px; opacity:0.6;">Tồn kho: <strong>${p.stock || 0}</strong></p>
                     ${user.role === 'admin' ? 
-                        `<button onclick="updateStock('${p.id}')" class="btn-gold" style="font-size:12px; width:100%; margin-top:10px;">SỬA KHO</button>` : 
+                        `<button onclick="updateStock('${p.id}')" class="btn-gold" style="font-size:12px; width:100%; margin-top:10px;">CẬP NHẬT KHO</button>` : 
                         `<a href="product.html?id=${encodeURIComponent(p.id)}" class="btn-gold" style="display:block; text-align:center; text-decoration:none; padding:12px; background:#111; color:#fff; margin-top:15px; font-weight:bold; letter-spacing:1px;">ĐẶT HÀNG NGAY</a>`
                     }
                 </div>`).join('');
         })
         .catch(err => {
-            grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:red; padding:20px;">LỖI TẢI DỮ LIỆU: Vui lòng kiểm tra lại Web App URL!</p>`;
+            grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:red; padding:20px;">LỖI KẾT NỐI: Vui lòng kiểm tra lại Web App URL!</p>`;
         });
 }
 
-// 3. CHI TIẾT ĐẶT HÀNG (TRANG PRODUCT.HTML) - TỰ ĐỘNG HIỆN ẢNH & MÃ SP
+/**
+ * 3. CHI TIẾT SẢN PHẨM (TRANG PRODUCT.HTML)
+ */
 function loadProductDetail() {
     const urlParams = new URLSearchParams(window.location.search);
     const pId = urlParams.get('id');
@@ -83,7 +90,9 @@ function loadProductDetail() {
         });
 }
 
-// 4. HIỂN THỊ LỊCH SỬ ĐƠN HÀNG (SỬA LỖI LỆCH CỘT & NHÓM NGÀY DD-MM-YYYY)
+/**
+ * 4. LỊCH SỬ ĐƠN HÀNG (SỬA LỆCH CỘT & NHÓM NGÀY)
+ */
 function renderOrders() {
     const container = document.getElementById('customer-history');
     if (!container) return;
@@ -106,8 +115,6 @@ function renderOrders() {
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
             const year = dateObj.getFullYear();
             const dateStr = `${day}-${month}-${year}`;
-            
-            // Lấy giờ chính xác từ cột date trong Sheets
             const timeStr = String(dateObj.getHours()).padStart(2, '0') + ":" + String(dateObj.getMinutes()).padStart(2, '0');
 
             if (dateStr !== currentDay) {
@@ -136,52 +143,9 @@ function renderOrders() {
     });
 }
 
-// 5. XỬ LÝ ĐẶT HÀNG
-function handleOrder() {
-    const user = JSON.parse(localStorage.getItem(CURRENT_USER));
-    const biz = document.getElementById('biz-name').value.trim();
-    const pid = document.getElementById('display-id').innerText;
-    if (!biz || pid === "---") return alert("Vui lòng nhập tên Hộ kinh doanh!");
-
-    const orderData = {
-        orderId: "DH" + Date.now(),
-        customer: user.name,
-        biz: biz,
-        pid: pid,
-        psize: document.getElementById('selected-size').value,
-        pqty: document.getElementById('selected-qty').value
-    };
-
-    fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(orderData) })
-    .then(() => { 
-        alert("Đặt hàng thành công! Cảm ơn bạn."); 
-        window.location.href = 'index.html'; 
-    });
-}
-
-// 6. ADMIN: DUYỆT ĐƠN & SỬA KHO
-function approveOrder(orderId) {
-    if (confirm("Xác nhận duyệt đơn và tự động trừ tồn kho?")) {
-        fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "approveOrder", orderId: orderId }) })
-        .then(() => {
-            alert("Đã duyệt đơn hàng!");
-            location.reload();
-        });
-    }
-}
-
-function updateStock(id) {
-    const newStock = prompt("Nhập số lượng tồn kho mới cho mã " + id + ":");
-    if (newStock !== null && !isNaN(newStock)) {
-        fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "updateStock", id, newStock }) })
-        .then(() => {
-            alert("Cập nhật kho thành công!");
-            location.reload();
-        });
-    }
-}
-
-// 7. ĐĂNG NHẬP & ĐĂNG XUẤT
+/**
+ * 5. HÀM LOGIN & LOGOUT
+ */
 function login(u, p) {
     if (u === 'trieutam' && p === 'trieutam123@') {
         localStorage.setItem(CURRENT_USER, JSON.stringify({ role: 'admin', name: 'Đức Triệu' }));
@@ -204,7 +168,27 @@ function logout() {
     }
 }
 
-// 8. KHỞI CHẠY HỆ THỐNG
+/**
+ * 6. ADMIN ACTIONS
+ */
+function approveOrder(orderId) {
+    if (confirm("Xác nhận duyệt đơn và tự động trừ tồn kho?")) {
+        fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "approveOrder", orderId: orderId }) })
+        .then(() => location.reload());
+    }
+}
+
+function updateStock(id) {
+    const newStock = prompt("Nhập số lượng tồn kho mới cho mã " + id + ":");
+    if (newStock !== null && !isNaN(newStock)) {
+        fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "updateStock", id, newStock }) })
+        .then(() => location.reload());
+    }
+}
+
+/**
+ * 7. KHỞI CHẠY HỆ THỐNG
+ */
 window.onload = function() {
     const user = JSON.parse(localStorage.getItem(CURRENT_USER));
     if (user && document.getElementById('user-display')) {
