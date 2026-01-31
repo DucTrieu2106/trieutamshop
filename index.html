@@ -3,42 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRIỆU TÂM - CỬA HÀNG</title>
+    <title>TRIỆU TÂM - LUXURY STORE</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
 </head>
 <body>
     <div class="navbar">
-        <h2 onclick="location.href='index.html'" style="cursor:pointer">TRIỆU TÂM</h2>
-        <div class="nav-links">
-            <span id="admin-btn-area"></span> 
-            <span id="user-display" style="font-size: 11px; margin-right: 15px; color: #d4af37; font-weight: bold;"></span>
-            <a href="javascript:void(0)" onclick="logout()" style="color: red; text-decoration: none; font-weight: bold; font-size: 11px;">ĐĂNG XUẤT</a>
-        </div>
+    <a href="index.html" class="brand-name">TRIỆU TÂM</a>
+    <div class="nav-links">
+        <span id="user-display" style="color: #d4af37; font-weight: bold; margin-right: 20px;"></span>
+        <a href="javascript:void(0)" onclick="logout()" style="color: #ff4d4d; text-decoration: none; font-size: 12px;">ĐĂNG XUẤT</a>
+    </div>
+</div>
+
+<div class="container">
+    <div style="text-align: center; margin: 60px 0;">
+        <h1 style="font-family: 'Playfair Display', serif; font-size: 50px; letter-spacing: 15px; margin: 0; color: #111;">TRIỆU TÂM</h1>
+        <p style="letter-spacing: 5px; font-size: 12px; color: #999; margin-top: 10px; text-transform: uppercase;">Premium Fashion Collection</p>
+    </div>
+    
+    <div class="search-container" style="max-width: 500px; margin: 0 auto 60px;">
+        <input type="text" id="product-search" placeholder="TÌM KIẾM SẢN PHẨM..." onkeyup="searchProducts()" 
+        style="width: 100%; padding: 15px; border: none; border-bottom: 1px solid #111; background: transparent; text-align: center; font-size: 11px; letter-spacing: 2px; outline: none;">
     </div>
 
-    <div class="container">
-        <h1 style="text-align: center; font-family: 'Playfair Display'; letter-spacing: 5px; margin: 40px 0;">COLLECTION</h1>
-        
-        <div class="search-container" style="max-width: 600px; margin: 0 auto 40px; padding: 0 20px;">
-            <input type="text" id="product-search" placeholder="Tìm kiếm theo mã hoặc tên..." onkeyup="searchProducts()" style="width: 100%; padding: 15px; outline: none; border: 1px solid #eee; border-radius: 25px; text-align: center;">
-        </div>
+    <div id="home-product-grid" class="product-grid"></div>
+    </div>
 
-        <div id="home-product-grid" class="product-grid"></div>
-
-        <div style="margin-top: 80px; padding: 20px; background: #fafafa; border-radius: 8px;">
-            <h2 style="text-align: center; letter-spacing: 3px; font-size: 18px;">LỊCH SỬ ĐẶT HÀNG CỦA BẠN</h2>
+        <div class="history-section">
+            <h2 style="text-align: center; letter-spacing: 5px; margin-bottom: 30px; font-family: 'Playfair Display';">ORDER HISTORY</h2>
             <div style="overflow-x: auto;">
-                <table style="width:100%; border-collapse: collapse; margin-top: 20px; font-size: 13px;">
+                <table>
                     <thead style="background:#111; color:#fff;">
-                        <tr>
-                            <th style="padding: 12px;">THỜI GIAN</th>
-                            <th>MÃ SP</th>
-                            <th>SIZE</th>
-                            <th>SL</th>
-                            <th>TRẠNG THÁI</th>
-                        </tr>
-                    </thead>
+    <tr>
+        <th style="padding: 12px; width: 10%;">GIỜ</th>
+        <th style="width: 25%;">HỘ KINH DOANH</th>
+        <th style="width: 15%;">MÃ SP</th>
+        <th style="width: 10%;">SIZE</th>
+        <th style="width: 10%;">SL</th>
+        <th style="width: 30%;">TRẠNG THÁI</th>
+    </tr>
+</thead>
                     <tbody id="customer-history" style="text-align:center;"></tbody>
                 </table>
             </div>
