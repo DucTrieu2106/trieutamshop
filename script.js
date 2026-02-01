@@ -3,30 +3,40 @@ const CURRENT_USER = "trieu_tam_session";
 
 /**
  * 1. HỆ THỐNG BẢO MẬT & ĐIỀU HƯỚNG
- * Đảm bảo khách phải đăng nhập mới được xem nội dung.
+ * Chặn khách chưa đăng nhập truy cập vào shop.
  */
 (function() {
     const user = JSON.parse(localStorage.getItem(CURRENT_USER));
     const isLoginPage = window.location.pathname.includes("login.html");
 
-    // Nếu chưa đăng nhập -> Đẩy về trang login
     if (!user && !isLoginPage) {
         window.location.replace("login.html");
     }
-    // Nếu đã đăng nhập mà vẫn ở trang login -> Đẩy vào trang chủ
     if (user && isLoginPage) {
         window.location.replace("index.html");
     }
 })();
 
 /**
- * 2. HIỂN THỊ & TÌM KIẾM SẢN PHẨM (TRANG CHỦ)
+ * 2. HIỂN THỊ SẢN PHẨM VỚI SKELETON LOADING
+ * Tạo hiệu ứng mượt mà đẳng cấp khi chờ dữ liệu từ Sheets.
  */
 function searchProducts() {
     const kw = document.getElementById('product-search') ? document.getElementById('product-search').value.toLowerCase().trim() : "";
     const grid = document.getElementById('home-product-grid');
     if (!grid) return;
     
+    // Hiện khung xương Skeleton
+    grid.innerHTML = Array(8).fill(0).map(() => `
+        <div class="skeleton-card" style="padding:20px; border:1px solid #eee; background:white; text-align:center;">
+            <div class="skeleton" style="width:100%; aspect-ratio:1/1; margin-bottom:15px; background:#eee;"></div>
+            <div class="skeleton" style="height:10px; width:30%; margin:0 auto 10px; background:#eee;"></div>
+            <div class="skeleton" style="height:15px; width:70%; margin:0 auto 15px; background:#eee;"></div>
+            <div class="skeleton" style="height:20px; width:40%; margin:0 auto; background:#eee;"></div>
+            <div class="skeleton" style="height:40px; width:100%; margin-top:20px; background:#eee;"></div>
+        </div>
+    `).join('');
+
     const user = JSON.parse(localStorage.getItem(CURRENT_USER));
 
     fetch(`${SHEET_URL}?mode=products`)
@@ -41,18 +51,19 @@ function searchProducts() {
                 return;
             }
 
-            grid.innerHTML = filtered.map(p => `
-                <div class="product-card">
-                    <img src="${p.img || 'https://via.placeholder.com/300'}" alt="${p.name}">
-                    <p style="font-size:10px; color:#999; margin-top:10px; letter-spacing:2px;">CODE: ${p.id}</p>
-                    <h3 style="font-family:'Playfair Display'; margin:10px 0;">${p.name}</h3>
-                    <p class="price" style="color:#d4af37; font-weight:bold; font-size:18px;">${p.price}</p>
-                    <p style="font-size:11px; opacity:0.6;">Tồn kho: <strong>${p.stock || 0}</strong></p>
-                    ${user.role === 'admin' ? 
-                        `<button onclick="updateStock('${p.id}')" class="btn-gold" style="font-size:12px; width:100%; margin-top:10px;">CẬP NHẬT KHO</button>` : 
-                        `<a href="product.html?id=${encodeURIComponent(p.id)}" class="btn-gold" style="display:block; text-align:center; text-decoration:none; padding:12px; background:#111; color:#fff; margin-top:15px; font-weight:bold; letter-spacing:1px;">ĐẶT HÀNG NGAY</a>`
-                    }
-                </div>`).join('');
+// Cập nhật lại phần hiển thị sản phẩm trong hàm searchProducts()
+grid.innerHTML = filtered.map(p => `
+    <div class="product-card">
+        <img src="${p.img || 'https://via.placeholder.com/300'}" alt="${p.name}">
+        <p style="font-size:10px; color:#999; margin-top:10px; letter-spacing:2px;">CODE: ${p.id}</p>
+        <h3 style="font-family:'Playfair Display'; margin:10px 0;">${p.name}</h3>
+        <p class="price" style="color:#d4af37; font-weight:bold; font-size:18px;">${p.price}</p>
+        <p style="font-size:11px; opacity:0.6;">Tồn kho: <strong>${p.stock || 0}</strong></p>
+        
+        <a href="product.html?id=${encodeURIComponent(p.id)}" class="btn-gold">
+            ĐẶT HÀNG NGAY
+        </a>
+    </div>`).join('');
         })
         .catch(err => {
             grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:red; padding:20px;">LỖI KẾT NỐI: Vui lòng kiểm tra lại Web App URL!</p>`;
@@ -60,7 +71,8 @@ function searchProducts() {
 }
 
 /**
- * 3. CHI TIẾT SẢN PHẨM (TRANG PRODUCT.HTML)
+ * 3. CHI TIẾT SẢN PHẨM & LOGIC SIZE (TRANG PRODUCT.HTML)
+ * Tự động lọc Size dựa trên Mã SP (#A hoặc #Q).
  */
 function loadProductDetail() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -81,9 +93,18 @@ function loadProductDetail() {
                     imgElement.src = p.img;
                     imgElement.style.display = "block";
                 }
+
+                // Logic phân loại Size theo ký tự đầu của Mã sản phẩm
                 const sizeSelect = document.getElementById('selected-size');
                 if (sizeSelect) {
-                    const sizes = ["S", "M", "L", "XL", "2XL"];
+                    let sizes = [];
+                    if (p.id.startsWith("#A")) {
+                        sizes = ["Free Size"];
+                    } else if (p.id.startsWith("#Q")) {
+                        sizes = ["Size 1", "Size 2"];
+                    } else {
+                        sizes = ["S", "M", "L", "XL", "2XL"];
+                    }
                     sizeSelect.innerHTML = sizes.map(s => `<option value="${s}">${s}</option>`).join('');
                 }
             }
@@ -111,10 +132,7 @@ function renderOrders() {
 
         sortedOrders.forEach(o => {
             const dateObj = new Date(o.date);
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const year = dateObj.getFullYear();
-            const dateStr = `${day}-${month}-${year}`;
+            const dateStr = `${String(dateObj.getDate()).padStart(2, '0')}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${dateObj.getFullYear()}`;
             const timeStr = String(dateObj.getHours()).padStart(2, '0') + ":" + String(dateObj.getMinutes()).padStart(2, '0');
 
             if (dateStr !== currentDay) {
@@ -144,7 +162,54 @@ function renderOrders() {
 }
 
 /**
- * 5. HÀM LOGIN & LOGOUT
+ * 5. XỬ LÝ ĐẶT HÀNG (FIX LỖI TREO NÚT XÁC NHẬN)
+ */
+function handleOrder() {
+    const user = JSON.parse(localStorage.getItem(CURRENT_USER));
+    const bizNameInput = document.getElementById('biz-name');
+    const pid = document.getElementById('display-id').innerText;
+    const psize = document.getElementById('selected-size').value;
+    const pqty = document.getElementById('selected-qty').value;
+
+    if (!bizNameInput.value.trim()) {
+        alert("Vui lòng nhập Tên hộ kinh doanh!");
+        bizNameInput.focus();
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="handleOrder()"]');
+    const originalText = btn.innerText;
+    btn.innerText = "ĐANG GỬI...";
+    btn.disabled = true;
+
+    const orderData = {
+        orderId: "DH" + Date.now(),
+        customer: user.name,
+        biz: bizNameInput.value.trim(),
+        pid: pid,
+        psize: psize || "Free Size",
+        pqty: pqty
+    };
+
+    fetch(SHEET_URL, { 
+        method: 'POST', 
+        mode: 'no-cors', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData) 
+    })
+    .then(() => { 
+        alert("XÁC NHẬN: Đơn hàng đã được gửi thành công!"); 
+        window.location.href = 'index.html'; 
+    })
+    .catch(err => {
+        alert("LỖI: Không thể kết nối. Sếp kiểm tra lại mạng nhé!");
+        btn.innerText = originalText;
+        btn.disabled = false;
+    });
+}
+
+/**
+ * 6. HÀM LOGIN & LOGOUT
  */
 function login(u, p) {
     if (u === 'trieutam' && p === 'trieutam123@') {
@@ -169,7 +234,7 @@ function logout() {
 }
 
 /**
- * 6. ADMIN ACTIONS
+ * 7. ADMIN ACTIONS (DUYỆT ĐƠN & SỬA KHO)
  */
 function approveOrder(orderId) {
     if (confirm("Xác nhận duyệt đơn và tự động trừ tồn kho?")) {
@@ -187,7 +252,7 @@ function updateStock(id) {
 }
 
 /**
- * 7. KHỞI CHẠY HỆ THỐNG
+ * 8. KHỞI CHẠY HỆ THỐNG
  */
 window.onload = function() {
     const user = JSON.parse(localStorage.getItem(CURRENT_USER));
